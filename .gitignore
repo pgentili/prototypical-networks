@@ -7,3 +7,6 @@ dist
 build
 *.zip
 *.tar.gz
+*_shot_results/
+logs/
+data/miniImagenet/images
