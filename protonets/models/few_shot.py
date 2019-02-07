@@ -45,7 +45,8 @@ class Protonet(nn.Module):
         z_proto = z[:n_class*n_support].view(n_class, n_support, z_dim).mean(1)
         zq = z[n_class*n_support:]
 
-        dists = euclidean_dist(zq, z_proto)
+        learnable_scale = nn.Parameter(torch.FloatTensor(1).fill_(1.0), requires_grad=True)
+        dists = euclidean_dist(zq, z_proto) * learnable_scale
 
         log_p_y = F.log_softmax(-dists, dim=1).view(n_class, n_query, -1)
 
