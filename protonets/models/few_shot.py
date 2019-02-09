@@ -1,5 +1,3 @@
-import torch
-import torch.nn as nn
 import torch.nn.functional as F
 
 from torch.autograd import Variable
@@ -46,6 +44,9 @@ class Protonet(nn.Module):
         zq = z[n_class*n_support:]
 
         learnable_scale = nn.Parameter(torch.FloatTensor(1).fill_(1.0), requires_grad=True)
+        if xq.is_cuda:
+          learnable_scale = learnable_scale.cuda()
+
         dists = euclidean_dist(zq, z_proto) * learnable_scale
 
         log_p_y = F.log_softmax(-dists, dim=1).view(n_class, n_query, -1)
