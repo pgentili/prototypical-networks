@@ -56,6 +56,7 @@ def main(opt):
 
     if val_loader is not None:
         meters['val'] = { field: tnt.meter.AverageValueMeter() for field in opt['log.fields'] }
+        meters['val_new'] = { field: tnt.meter.AverageValueMeter() for field in opt['log.fields'] }
 
     def on_start(state):
         if os.path.isfile(trace_file):
@@ -88,7 +89,16 @@ def main(opt):
                                  meters['val'],
                                  desc="Epoch {:d} valid".format(state['epoch']))
 
+            state['model'].propose_new()
+            model_utils.evaluate(state['model'],
+                                 val_loader,
+                                 meters['val_new'],
+                                 desc="Epoch {:d} valid (new struct)".format(state['epoch']))
+
         meter_vals = log_utils.extract_meter_values(meters)
+        if meter_vals['val']['loss'] < meter_vals['val_new']['loss']
+            state['model'].reject_new()
+
         print("Epoch {:02d}: {:s}".format(state['epoch'], log_utils.render_meter_values(meter_vals)))
         meter_vals['epoch'] = state['epoch']
         with open(trace_file, 'a') as f:

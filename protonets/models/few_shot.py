@@ -1,3 +1,7 @@
+import random
+
+import torch
+import torch.nn as nn
 import torch.nn.functional as F
 
 from torch.autograd import Variable
@@ -61,6 +65,35 @@ class Protonet(nn.Module):
             'acc': acc_val.item()
         }
 
+class ModularProtonet(Protonet):
+    def __init__(self, module_lists):
+        super(Protonet, self).__init__()
+        self.module_lists = module_lists
+        self.active_blocks = [0 for _ in module_lists]
+        self.encoder = self.build_encoder(active_blocks)
+
+    def build_encoder(self, blocks):
+        return nn.Sequential(
+            *[module_list[ix] for module_list, ix in zip(self.module_lists,
+                                                         active_modules)],
+            Flatten()
+        )
+
+    def propose_new(self):
+        rand_list_ix = random.rand_range(len(self.module_lists))
+        rand_module_ix = random.rand_range(len(self.module_lists[rand_list_ix]))
+        self.old_block = (rand_list_ix, self.active_blocks[rand_list_ix])
+
+        # Update with new block
+        self.active_blocks[rand_list_ix] = rand_module_ix
+        self.encoder = self.build_encoder(self.proposed_blocks)
+
+    def reject_new(self):
+        ix, block = self.old_block
+        self.active_blocks[ix] = block
+        self.encoder = self.old_encoder
+
+
 @register_model('protonet_conv')
 def load_protonet_conv(**kwargs):
     x_dim = kwargs['x_dim']
@@ -84,3 +117,27 @@ def load_protonet_conv(**kwargs):
     )
 
     return Protonet(encoder)
+
+@register_model('modular_protonet')
+def load_modular_protonet(**kwargs):
+    x_dim = kwargs['x_dim']
+    hid_dim = kwargs['hid_dim']
+    z_dim = kwargs['z_dim']
+
+    def conv_block(in_channels, out_channels):
+        return nn.Sequential(
+            nn.Conv2d(in_channels, out_channels, 3, padding=1),
+            nn.BatchNorm2d(out_channels),
+            nn.ReLU(),
+            nn.MaxPool2d(2)
+        )
+
+    choices_per = 2
+    module_lists = [
+        [conv_block(x_dim[0], hid_dim) for _ in range(choices_per)],
+        [conv_block(hid_dim, hid_dim) for _ in range(choices_per)],
+        [conv_block(hid_dim, hid_dim) for _ in range(choices_per)],
+        [conv_block(x_dim[0], z_dim) for _ in range(choices_per)]
+    ]
+
+    return ModularProtonet(module_lists)
