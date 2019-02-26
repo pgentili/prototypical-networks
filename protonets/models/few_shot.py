@@ -111,6 +111,9 @@ class ResNet(nn.Module):
     def forward(self, x):
         return self.f(x, self.params, self.training)
 
+    def parameters(self):
+        return [v for v in self.params.values() if v.requires_grad]
+
 @register_model('protonet_conv')
 def load_protonet_conv(**kwargs):
     x_dim = kwargs['x_dim']
