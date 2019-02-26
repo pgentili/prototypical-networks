@@ -96,7 +96,7 @@ def main(opt):
                                  desc="Epoch {:d} valid (new struct)".format(state['epoch']))
 
         meter_vals = log_utils.extract_meter_values(meters)
-        if meter_vals['val']['loss'] < meter_vals['val_new']['loss']
+        if meter_vals['val']['loss'] < meter_vals['val_new']['loss']:
             state['model'].reject_new()
 
         print("Epoch {:02d}: {:s}".format(state['epoch'], log_utils.render_meter_values(meter_vals)))

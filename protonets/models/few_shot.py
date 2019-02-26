@@ -70,12 +70,12 @@ class ModularProtonet(Protonet):
         super(Protonet, self).__init__()
         self.module_lists = module_lists
         self.active_blocks = [0 for _ in module_lists]
-        self.encoder = self.build_encoder(active_blocks)
+        self.encoder = self.build_encoder(self.active_blocks)
 
     def build_encoder(self, blocks):
         return nn.Sequential(
             *[module_list[ix] for module_list, ix in zip(self.module_lists,
-                                                         active_modules)],
+                                                         blocks)],
             Flatten()
         )
 
@@ -86,7 +86,7 @@ class ModularProtonet(Protonet):
 
         # Update with new block
         self.active_blocks[rand_list_ix] = rand_module_ix
-        self.encoder = self.build_encoder(self.proposed_blocks)
+        self.encoder = self.build_encoder(self.active_blocks)
 
     def reject_new(self):
         ix, block = self.old_block
