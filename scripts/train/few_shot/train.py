@@ -6,6 +6,7 @@ from tqdm import tqdm
 import numpy as np
 
 import torch
+import torch.nn as nn
 import torch.optim as optim
 import torch.optim.lr_scheduler as lr_scheduler 
 import torchvision
@@ -111,7 +112,7 @@ def main(opt):
                 print("==> best model (loss = {:0.6f}), saving model...".format(hook_state['best_loss']))
 
                 state['model'].cpu()
-                torch.save(state['model'], os.path.join(opt['log.exp_dir'], 'best_model.pt'))
+                torch.save(state['model'].state_dict(), os.path.join(opt['log.exp_dir'], 'best_model_state_dict.pt'))
                 if opt['data.cuda']:
                     state['model'].cuda()
 

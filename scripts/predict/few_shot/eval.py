@@ -12,7 +12,9 @@ import protonets.utils.model as model_utils
 
 def main(opt):
     # load model
-    model = torch.load(opt['model.model_path'])
+    model = model_utils.load(opt)
+    state_dict = torch.load(opt['model.model_path'])
+    model.load_state_dict(state_dict)
     model.eval()
 
     # load opts
