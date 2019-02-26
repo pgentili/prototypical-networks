@@ -2,6 +2,8 @@ import os
 import random
 from shutil import copyfile
 
+from PIL import Image
+
 # Splits each train class into 480/120 train/val for standard image
 # classification training (i.e. 64 way many-shot)
 data_dir = os.path.join(os.getcwd(), 'data')
@@ -26,8 +28,10 @@ with open('{}.txt'.format(split_path)) as class_file:
     num_images = len(class_images)
     num_train = int(0.8 * num_images)
     for image in class_images[:num_train]:
-      copyfile(os.path.join(class_dir, image),
-               os.path.join(train_output_dir, image))
+      im = Image.open(os.path.join(class_dir, image))
+      im_resized = im.resize((84, 84))
+      im_resized.save(os.path.join(train_output_dir, image), 'JPEG')
     for image in class_images[num_train:]:
-      copyfile(os.path.join(class_dir, image),
-               os.path.join(val_output_dir, image))
+      im = Image.open(os.path.join(class_dir, image))
+      im_resized = im.resize((84, 84))
+      im_resized.save(os.path.join(val_output_dir, image), 'JPEG')
