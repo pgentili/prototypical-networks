@@ -1,4 +1,5 @@
 import random
+import os
 
 import torch
 import torch.nn as nn
@@ -7,6 +8,7 @@ import torch.nn.functional as F
 from torch.autograd import Variable
 
 from protonets.models import register_model
+from protonets.wrn.resnet import resnet
 
 from .utils import euclidean_dist
 
@@ -93,6 +95,21 @@ class ModularProtonet(Protonet):
         self.active_blocks[ix] = block
         self.encoder = self.old_encoder
 
+class ResNet(nn.Module):
+    def __init__(self, depth=28, width=10, model_dir='saved_model'):
+        super(ResNet, self).__init__()
+
+        f, params = resnet(depth, width, 64)
+        state_dict = torch.load(os.path.join(model_dir, 'model.pt7'))
+        params_tensors = state_dict['params']
+        for k, v in params.items():
+            v.data.copy_(params_tensors[k]) 
+
+        self.f = f
+        self.params = params
+
+    def forward(self, x):
+        return self.f(x, self.params, self.training)
 
 @register_model('protonet_conv')
 def load_protonet_conv(**kwargs):
@@ -117,6 +134,11 @@ def load_protonet_conv(**kwargs):
     )
 
     return Protonet(encoder)
+
+@register_model('protonet_resnet')
+def load_protonet_resnet(**kwargs):
+  resnet_encoder = ResNet(model_dir='models/saved_model_28_10')
+  return Protonet(resnet_encoder)
 
 @register_model('modular_protonet')
 def load_modular_protonet(**kwargs):
