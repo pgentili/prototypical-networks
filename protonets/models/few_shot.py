@@ -24,6 +24,7 @@ class Protonet(nn.Module):
         super(Protonet, self).__init__()
         
         self.encoder = encoder
+        #self.add_module('encoder', self.encoder)
 
     def loss(self, sample):
         xs = Variable(sample['xs']) # support
@@ -108,11 +109,12 @@ class ResNet(nn.Module):
         self.f = f
         self.params = params
 
+        for k, v in self.params.items():
+            if v.requires_grad:
+                self.register_parameter(k.replace('.', ''), nn.Parameter(v))
+
     def forward(self, x):
         return self.f(x, self.params, self.training)
-
-    def parameters(self):
-        return [v for v in self.params.values() if v.requires_grad]
 
 @register_model('protonet_conv')
 def load_protonet_conv(**kwargs):
@@ -140,7 +142,7 @@ def load_protonet_conv(**kwargs):
 
 @register_model('protonet_resnet')
 def load_protonet_resnet(**kwargs):
-  resnet_encoder = ResNet(model_dir='models/saved_model_28_10')
+  resnet_encoder = ResNet(16, 1, model_dir='models/saved_model')
   return Protonet(resnet_encoder)
 
 @register_model('modular_protonet')
